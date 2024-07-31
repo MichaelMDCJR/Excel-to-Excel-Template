@@ -25,7 +25,7 @@ def read_excel(file_path):
         err.minsize(300, 100)
         err.attributes("-topmost", True)
         directions = Label(
-            text="Error Opening File. Make sure the selected file is an Excel file(.xlsx).", wraplength=260, padx=20, pady=10)
+            text="No File Selected. Make sure the selected file is an Excel file(.xlsx). Closing application.", wraplength=260, padx=20, pady=10)
         directions.grid(row=0, column=0)
 
         close_button = Button(text="Okay", command=lambda: [prompt.destroy, exit()])
@@ -131,14 +131,15 @@ def save_prompt():
 def save_file(name):
     # Creates json file and dumps info into it
     json_dict = json.dumps(mapping)
-    with open(name + ".json", "w") as saved_json:
+    with open(os.path.join(user_path, name + ".json"), "w") as saved_json:
         json.dump(json_dict, saved_json)
 
 # Loads the selected json file
 def load_file():
     global mapping
     # Loads selected json
-    selected_json = filedialog.askopenfilename(initialdir=os.getcwd(), title="Load Mapping", filetypes=[("Json", "*.json")])
+    global user_path
+    selected_json = filedialog.askopenfilename(initialdir=user_path, title="Load Mapping", filetypes=[("Json", "*.json")])
     # If 'cancel' was selected, json will be empty
     if not selected_json:
         return
@@ -173,24 +174,25 @@ prompt.mainloop()
 
 # Dictionary to store mapping of columns
 mapping = {}
+user_path = os.getenv("LOCALAPPDATA") + "\\Excel Transfer Settings"
+
+if not os.path.exists(user_path):
+    os.makedirs(user_path)
 
 # Prompt user for source file, template, and output location and name
 try:
-    source_file = filedialog.askopenfilename(title="Source File")
-    template_file = filedialog.askopenfilename(title="Template File")
-    output_path = filedialog.asksaveasfilename(title="Output File Name and Location")
+    source_file = filedialog.askopenfilename(title="Source File", filetypes=[("Excel Files", ".xlsx .xls")])
+    if not source_file:
+        exit()
+    template_file = filedialog.askopenfilename(title="Template File", filetypes=[("Excel Files", ".xlsx .xls")])
+    if not template_file:
+        exit()
+    output_path = filedialog.asksaveasfilename(title="Output File Name and Location", filetypes=[("Excel Files", ".xlsx .xls")])
+    if not output_path:
+        exit()
 
 except:
-    prompt = tk.Tk()
-    prompt.title("File Error")
-    prompt.minsize(300, 150)
-    prompt.attributes("-topmost", True)
-    directions = Label(
-        text="Error Opening File", wraplength=260, padx=20, pady=10)
-    directions.grid(row=0, column=0)
-
-    close_button = Button(text="Okay", command=prompt.destroy)
-    close_button.grid(row=1, column=0, pady=10)
+    exit()
 
 # Read excel files to df
 source_df = read_excel(source_file)
