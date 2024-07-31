@@ -109,29 +109,13 @@ def delete_map():
         mappings_listbox.insert(temp_counter,str(temp_counter) + ": " + str({mapping[i]})[2:-2] + " mapped to " + str({i})[2:-2])
         temp_counter = temp_counter + 1
 
-# Prompts the user to choose a name to save the file
-def save_prompt():
-    save_window = tk.Tk()
-    save_window.title("Enter File Name")
-    save_window.minsize(320, 100)
-    save_window.attributes("-topmost", True)
-    save_window.config(bg="#CE1126")
-    # Save entry
-    save_label = Label(save_window, text="Enter the name you wish to save your mapping to:", font=("Arial", 12), bg="#CE1126")
-    save_label.grid(row=0, column=0)
-    save_entry = tk.Entry(save_window)
-    save_entry.grid(row=1, column=0, pady=10, padx=10)
-
-    # Save button
-    save_real_button = tk.Button(save_window, text="Save", font=("Arial", 12), command=lambda: [save_file(save_entry.get()), save_window.destroy()])
-    save_real_button.grid(row=2, column=0)
-    save_window.mainloop()
-
 # Saves the file
-def save_file(name):
+def save_file():
     # Creates json file and dumps info into it
+    # Make save path open file explorer
+    save_path = filedialog.asksaveasfilename(title="Output File Name and Location", filetypes=[("Json", ".json")], initialdir=user_path)
     json_dict = json.dumps(mapping)
-    with open(os.path.join(user_path, name + ".json"), "w") as saved_json:
+    with open(save_path + ".json", "w") as saved_json:
         json.dump(json_dict, saved_json)
 
 # Loads the selected json file
@@ -246,7 +230,7 @@ template_name_entry = tk.Entry(root)
 source_index_entry = tk.Entry(root)
 
 # Save button
-save_button = tk.Button(root, text="Save Current Mapping", command=save_prompt)
+save_button = tk.Button(root, text="Save Current Mapping", command=save_file)
 save_button.config(font=("Arial",12))
 save_button.grid(row=4, column=0)
 
