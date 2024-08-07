@@ -10,31 +10,50 @@ import sys
 
 # Created by Michael Carlson, 8-2-24
 
+# Global vars
+# Dictionary to store mapping of columns and path to store settings
+mapping = {}
+user_path = os.getenv("LOCALAPPDATA") + "\\Excel Transfer Settings"
+is_error = False
+# Files collected
+source_file = ""
+template_file = ""
+output_path = ""
+errors_occurred = 0
+
 
 # Function to read Excel file
 def read_excel(file_path):
+    global errors_occurred
     # Try to read Excel file and if error, show popup
     try:
         return pd.read_excel(file_path)
     except:
-        # Error pop up
-        err = tk.Tk()
-        err.title("File Error")
-        err.minsize(300, 100)
-        err.lift()
-        err.attributes("-topmost", True)
-        err.attributes("-topmost", False)
-        err_directions = Label(
-            text="No File Selected. Make sure the selected file is an Excel file(.xlsx). Closing application.",
-            wraplength=260, padx=20, pady=10)
-        err_directions.grid(row=0, column=0)
-        # Since error window popped up, set run error function
-        error_occur()
+        # Only show error message once
+        if errors_occurred < 1:
+            # Error pop up
+            err = tk.Tk()
+            err.title("File Error")
+            err.minsize(300, 100)
+            err.lift()
+            err.attributes("-topmost", True)
+            err.attributes("-topmost", False)
+            err_directions = Label(
+                text="Problem selecting file. Make sure the selected file is an Excel file(.xlsx). "
+                     "Closing application.",
+                wraplength=260, padx=20, pady=10)
+            err_directions.grid(row=0, column=0)
 
-        # Close button
-        err_close_button = Button(text="Okay", command=err.destroy)
-        err_close_button.grid(row=1, column=0, pady=10)
-        err.mainloop()
+            # Close button
+            err_close_button = Button(text="Okay", command=err.destroy)
+            err_close_button.grid(row=1, column=0, pady=10)
+            err.mainloop()
+
+        # Since error occurred, set run error function
+        error_occur()
+        # Add 1 to error counter
+        errors_occurred += 1
+
 
 # If error occurs, set is_error to True to be caught later
 def error_occur():
@@ -180,54 +199,153 @@ def load_file():
             temp_counter = temp_counter + 1
 
 
+# Opens file explorer to select source file
+def source_file_open():
+    global source_file
+    global source_file_display
+    try:
+        # Sets state to allow insert and then disables to stop editing
+        source_file_display.config(state=NORMAL)
+        source_file_display.delete(0, END)
+        source_file = filedialog.askopenfilename(title="Source File", filetypes=[("Excel Files", ".xlsx .xls")])
+        source_file_display.insert(0, os.path.basename(source_file))
+        source_file_display.config(state=DISABLED)
+        # if not source_file:
+        #     sys.exit()
+    except:
+        sys.exit()
+
+
+# Opens file explorer to select template file
+def template_file_open():
+    global template_file
+    global temp_file_display
+    try:
+        # Sets state to allow insert and then disables to stop editing
+        temp_file_display.config(state=NORMAL)
+        temp_file_display.delete(0, END)
+        template_file = filedialog.askopenfilename(title="Template File", filetypes=[("Excel Files", ".xlsx .xls")])
+        temp_file_display.insert(0, os.path.basename(template_file))
+        temp_file_display.config(state=DISABLED)
+        # if not template_file:
+        #     sys.exit()
+    except:
+        sys.exit()
+
+
+# Opens file explorer to select template file
+def mapping_file_open():
+    global output_path
+    global mapping_file_display
+    try:
+        # Sets state to allow insert and then disables to stop editing
+        mapping_file_display.config(state=NORMAL)
+        mapping_file_display.delete(0, END)
+        output_path = filedialog.asksaveasfilename(title="Output File Name and Location",
+                                                   filetypes=[("Excel Files", ".xlsx .xls")])
+        mapping_file_display.insert(0, os.path.basename(output_path))
+        mapping_file_display.config(state=DISABLED)
+        # if not output_path:
+        #     sys.exit()
+    except:
+        sys.exit()
+
+
+# Closes the program
+def on_close():
+    sys.exit()
+
+
 # Initial prompt telling users how to  use the program
 prompt = tk.Tk()
 prompt.title("Directions")
-prompt.minsize(680, 240)
+prompt.minsize(760, 380)
 prompt.config(bg="#CE1126")
-directions = Label(text="A set of file explorers will pop up after this.\n\n"
+directions = Label(text="Use the buttons below to open file explorers and select your files.\n\n"
                         " •  First, select your source file, information is drawn from here\n"
                         " •  Next, select your template Excel file, information is placed in here\n"
                         " •  Finally, select the location of the new file being created and give it a name\n\n"
                         "You may write over an existing file if needed.\n", font=("Arial", 14),
                    wraplength=640, padx=20, pady=10, bg="#CE1126", fg="#FFFFFF", justify=LEFT)
-directions.grid(row=0, column=0)
+directions.grid(row=1, column=1)
+
+# Source file label, button, and entry
+source_file_label = Label(text="Select Source File", font=("Arial", 14), bg="#CE1126", fg="#FFFFFF", justify=LEFT)
+source_file_label.grid(row=3, column=1, sticky=W)
+source_file_button = Button(text="Select File", command=source_file_open)
+source_file_button.grid(row=3, column=3, padx=10)
+source_file_display = Entry(font=("Arial", 14), bg="#CE1126", fg="#FFFFFF", state=DISABLED,
+                            disabledbackground="#CE1126", disabledforeground="#FFFFFF")
+source_file_display.grid(row=5, column=1, sticky=W, padx=15)
+
+# Template file label, button, and entry
+temp_file_label = Label(text="Select Template File", font=("Arial", 14), bg="#CE1126", fg="#FFFFFF", justify=LEFT)
+temp_file_label.grid(row=7, column=1, sticky=W)
+temp_file_button = Button(text="Select File", command=template_file_open)
+temp_file_button.grid(row=7, column=3, padx=10)
+temp_file_display = Entry(font=("Arial", 14), bg="#CE1126", fg="#FFFFFF", state=DISABLED, disabledbackground="#CE1126",
+                          disabledforeground="#FFFFFF")
+temp_file_display.grid(row=9, column=1, sticky=W, padx=15)
+
+# Template file label, button, and entry
+mapping_file_label = Label(text="Select Mapping File Name and Location", font=("Arial", 14), bg="#CE1126", fg="#FFFFFF",
+                           justify=LEFT)
+mapping_file_label.grid(row=11, column=1, sticky=W)
+mapping_file_button = Button(text="Select File", command=mapping_file_open)
+mapping_file_button.grid(row=11, column=3, padx=10)
+mapping_file_display = Entry(font=("Arial", 14), bg="#CE1126", fg="#FFFFFF", state=DISABLED,
+                             disabledbackground="#CE1126", disabledforeground="#FFFFFF")
+mapping_file_display.grid(row=13, column=1, sticky=W, padx=15)
+
+# Grid weights
+prompt.columnconfigure(1, weight=5)
+prompt.columnconfigure(3, weight=5)
+
+prompt.rowconfigure(1, weight=10)
+prompt.rowconfigure(3, weight=5)
+prompt.rowconfigure(5, weight=5)
+prompt.rowconfigure(7, weight=5)
+prompt.rowconfigure(9, weight=5)
+prompt.rowconfigure(11, weight=5)
+prompt.rowconfigure(13, weight=5)
+
+prompt.columnconfigure(0, weight=20)
+prompt.columnconfigure(2, weight=5)
+prompt.columnconfigure(4, weight=20)
+
+prompt.rowconfigure(0, weight=20)
+prompt.rowconfigure(2, weight=5)
+prompt.rowconfigure(4, weight=2)
+prompt.rowconfigure(6, weight=5)
+prompt.rowconfigure(8, weight=2)
+prompt.rowconfigure(10, weight=5)
+prompt.rowconfigure(12, weight=2)
+prompt.rowconfigure(14, weight=5)
+prompt.rowconfigure(16, weight=20)
+
 
 # Close button
 close_button = Button(text="Proceed", command=prompt.destroy)
-close_button.grid(row=1, column=0, pady=10)
+close_button.grid(row=15, column=1, pady=10)
+
+# Ensures when the window is closed, the program stops and no error occurs
+prompt.protocol("WM_DELETE_WINDOW", on_close)
 
 # Main loop
 prompt.mainloop()
-
-# Dictionary to store mapping of columns and path to store settings
-mapping = {}
-user_path = os.getenv("LOCALAPPDATA") + "\\Excel Transfer Settings"
-is_error = False
 
 # If no folder is there to store settings, create it
 if not os.path.exists(user_path):
     os.makedirs(user_path)
 
-# Prompt user for source file, template, and output location and name
-try:
-    source_file = filedialog.askopenfilename(title="Source File", filetypes=[("Excel Files", ".xlsx .xls")])
-    if not source_file:
-        sys.exit()
-    template_file = filedialog.askopenfilename(title="Template File", filetypes=[("Excel Files", ".xlsx .xls")])
-    if not template_file:
-        sys.exit()
-    output_path = filedialog.asksaveasfilename(title="Output File Name and Location",
-                                               filetypes=[("Excel Files", ".xlsx .xls")])
-    if not output_path:
-        sys.exit()
-
-except:
-    sys.exit()
-
 # Read excel files to df
 source_df = read_excel(source_file)
 template_df = read_excel(template_file)
+
+# If no output path was selected, give error
+if not output_path:
+    read_excel(output_path)
+    error_occur()
 
 # If error occurred while reading file, exit
 if is_error:
